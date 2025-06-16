@@ -1,73 +1,107 @@
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    public float walkSpeed = 5f;
-    public float runSpeed = 10f;
-    public float jumpForce = 10f;
-    public LayerMask groundLayer;
-    public float comboResetTime = 0.5f;
+    private PlayerAnimatorController anim;
+
+    [SerializeField] float moveSpeed;
+    [SerializeField] float jumpForce;
+    [SerializeField] Transform groundCheck;
+    [SerializeField] LayerMask groundLayer;
+    [SerializeField] float attackCooldown;// 공격 쿨타임 (초)
+    private bool canAttack = true;
 
     private Rigidbody2D rb;
-    private Animator animator;
     private bool isGrounded;
-
-    private bool isRun;
-    private int attackClick = 0;
-    private float lastClickTime;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        animator = GetComponent<Animator>();
+        anim = GetComponent<PlayerAnimatorController>();
     }
 
     void Update()
     {
-        float moveX = Input.GetAxis("Horizontal");
-        isRun = Input.GetKey(KeyCode.LeftShift);
-        float currentSpeed = isRun ? runSpeed : walkSpeed;
-        rb.linearVelocity = new Vector2(moveX * currentSpeed, rb.linearVelocity.y);
+        Move();
+        Jump();
+        AnimationControl();
+    }
 
-        // 애니메이션: 속도 설정
-        animator.SetFloat("Speed", Mathf.Abs(moveX));
-        animator.SetBool("isRun", isRun);
+    void Move()
+    {
+        float moveInput = Input.GetAxisRaw("Horizontal");
+
+        // 달리기 입력 처리
+        float currentSpeed = Input.GetKey(KeyCode.LeftShift) ? moveSpeed * 2 : moveSpeed;
+        Debug.Log(currentSpeed);
+
+        // Rigidbody2D 이동 적용
+        rb.linearVelocity = new Vector2(moveInput * currentSpeed, rb.linearVelocity.y);
 
         // 방향 전환
-        if (moveX > 0) transform.localScale = new Vector3(5, 5, 1);
-        else if (moveX < 0) transform.localScale = new Vector3(-5, 5, 1);
+        if (moveInput != 0)
+            transform.localScale = new Vector3(Mathf.Sign(moveInput), 1, 1);
+    }
 
-        // 바닥 체크
-        isGrounded = Physics2D.OverlapCircle(transform.position, 2.7f, groundLayer);
-        animator.SetBool("isJump", !isGrounded);
+    void Jump()
+    {
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.5f, groundLayer);
 
-        // 점프
         if (Input.GetButtonDown("Jump") && isGrounded)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         }
+    }
 
-        // 우클릭 공격
-        if (Input.GetMouseButtonDown(0))
+    void AnimationControl()
+    {
+        // 이동 처리
+        HandleMove();
+
+        // 공격 처리
+        HandleAttack();
+
+        // 피격 처리
+        if (Input.GetKeyDown(KeyCode.X))
         {
-            if (Time.time - lastClickTime > comboResetTime)
-            {
-                attackClick = 0; // 시간 초과 시 초기화
-            }
+            anim.SetDamaged();
+        }
 
-            attackClick++;
-            attackClick = Mathf.Clamp(attackClick, 0, 2); // 최대 2연타까지
+        // 죽음 처리
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            anim.SetDeath();
+        }
 
-            animator.SetInteger("attackClick", attackClick);
-            lastClickTime = Time.time;
+        // 기타 처리
+        if (Input.GetKeyDown(KeyCode.V))
+        {
+            anim.SetOther();
         }
     }
 
-    // 애니메이션 이벤트에서 호출할 수 있음
-    public void ResetAttack()
+    void HandleAttack()
     {
-        attackClick = 0;
-        animator.SetInteger("attackClick", 0);
+        if (Input.GetKeyDown(KeyCode.Mouse0) && canAttack)
+        {
+            StartCoroutine(AttackRoutine());
+        }
+    }
+
+    System.Collections.IEnumerator AttackRoutine()
+    {
+        canAttack = false;
+        anim.SetAttack();
+
+        // 쿨타임 대기
+        yield return new WaitForSeconds(attackCooldown);
+
+        canAttack = true;
+    }
+
+    void HandleMove()
+    {
+        float move = Input.GetAxisRaw("Horizontal");
+        anim.SetMove(move != 0);
     }
 }
