@@ -33,7 +33,6 @@ public class Player : MonoBehaviour
 
         // 달리기 입력 처리
         float currentSpeed = Input.GetKey(KeyCode.LeftShift) ? moveSpeed * 2 : moveSpeed;
-        Debug.Log(currentSpeed);
 
         // Rigidbody2D 이동 적용
         rb.linearVelocity = new Vector2(moveInput * currentSpeed, rb.linearVelocity.y);
