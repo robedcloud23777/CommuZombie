@@ -4,12 +4,12 @@ public class Enemy : MonoBehaviour
 {
     public float health = 100f;
     public float moveSpeed = 2f;
-    public float detectionRange = 10f;   // 인식 시작 범위
-    public float lostRange = 20f;        // 추적 해제 범위 (detectionRange보다 커야 함)
-
+    public float detectionRange = 5f;
+    public float lostRange = 7f;
 
     public Rigidbody2D rb { get; private set; }
     public Transform player { get; private set; }
+    public Animator animator { get; private set; }
 
     private IEnemyState currentState;
 
@@ -17,6 +17,7 @@ public class Enemy : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         player = GameObject.FindWithTag("Player").transform;
+        animator = GetComponentInChildren<Animator>();
 
         ChangeState(new IdleState());
     }
@@ -41,4 +42,18 @@ public class Enemy : MonoBehaviour
             ChangeState(new DeadState());
         }
     }
+
+    public void FaceToPlayer()
+    {
+        if (player == null) return;
+
+        float direction = player.position.x - transform.position.x;
+        if (Mathf.Abs(direction) > 0.1f)
+        {
+            Vector3 scale = transform.localScale;
+            scale.x = Mathf.Sign(direction) * Mathf.Abs(scale.x);
+            transform.localScale = scale;
+        }
+    }
+
 }

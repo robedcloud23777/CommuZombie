@@ -17,7 +17,7 @@ public class IdleState : IEnemyState
         this.enemy = enemy;
         timer = 0f;
         SetRandomIdleState();
-        Debug.Log($"{enemy.name}: Idle 상태 진입");
+        enemy.animator.SetBool("isWalking", false);
     }
 
     public void Update()
@@ -64,11 +64,21 @@ public class IdleState : IEnemyState
         if (actionState == IdleActionState.Walking)
         {
             direction = Random.value < 0.5f ? -1f : 1f;
+            enemy.FaceToPlayer();
             Debug.Log($"{enemy.name}: 걷기 시작 (방향: {direction}, 시간: {currentDuration:F1}s)");
         }
         else
         {
             Debug.Log($"{enemy.name}: 멈춤 상태 (시간: {currentDuration:F1}s)");
+        }
+
+        if (actionState == IdleActionState.Walking)
+        {
+            enemy.animator.SetBool("1_Move", true);
+        }
+        else
+        {
+            enemy.animator.SetBool("1_Move", false);
         }
     }
 }

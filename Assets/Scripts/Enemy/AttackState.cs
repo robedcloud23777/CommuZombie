@@ -9,8 +9,7 @@ public class AttackState : IEnemyState
     public void Enter(Enemy enemy)
     {
         this.enemy = enemy;
-        lastAttackTime = -attackCooldown; // 즉시 공격 가능
-        Debug.Log($"{enemy.name}: Attack 상태 진입");
+        enemy.animator.SetTrigger("2_Attack");
     }
 
     public void Update()

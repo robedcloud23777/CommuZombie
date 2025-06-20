@@ -7,7 +7,7 @@ public class ChaseState : IEnemyState
     public void Enter(Enemy enemy)
     {
         this.enemy = enemy;
-        Debug.Log($"{enemy.name}: Chase 상태 진입");
+        enemy.animator.SetBool("1_Move", true);
     }
 
     public void Update()
@@ -28,6 +28,7 @@ public class ChaseState : IEnemyState
         Vector2 direction = (targetPosition - (Vector2)enemy.transform.position).normalized;
 
         enemy.rb.linearVelocity = new Vector2(direction.x * enemy.moveSpeed, enemy.rb.linearVelocity.y);
+        enemy.FaceToPlayer();
 
         if (distance < 1.5f)
         {
@@ -37,7 +38,7 @@ public class ChaseState : IEnemyState
 
     public void Exit()
     {
+        enemy.animator.SetBool("isWalking", false);
         enemy.rb.linearVelocity = Vector2.zero;
-        Debug.Log($"{enemy.name}: Chase 상태 종료");
     }
 }
